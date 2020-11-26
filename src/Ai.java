@@ -7,8 +7,8 @@ import java.util.ArrayList;
 
 public class Ai extends Player {
 
-    private int doneActions = 0;
-    private int maxDepth = 100;
+    protected int doneActions = 0;
+    protected int maxDepth = 100;
 
     public Ai(PlayerType type) {
         super(type);
@@ -71,7 +71,7 @@ public class Ai extends Player {
         }
     }
 
-    private int eval(Game game) {
+    int eval(Game game) {
         return 0;
     }
 
@@ -102,7 +102,7 @@ public class Ai extends Player {
         return bestAction;
     }
 
-    private int maxForceAttack(Game game, int depth) {
+    protected int maxForceAttack(Game game, int depth) {
         if (depth == maxDepth) {
             return eval(game);
         }
@@ -128,7 +128,7 @@ public class Ai extends Player {
         return maxValue;
     }
 
-    private int maxSecondMove(Game game, int depth) {
+    protected int maxSecondMove(Game game, int depth) {
         if (depth == maxDepth) {
             return eval(game);
         }
@@ -152,7 +152,7 @@ public class Ai extends Player {
         return maxValue;
     }
 
-    private int minForceAttack(Game game, int depth) {
+    protected int minForceAttack(Game game, int depth) {
         if (depth == maxDepth) {
             return eval(game);
         }
@@ -179,7 +179,7 @@ public class Ai extends Player {
 
     }
 
-    private int minSecondMove(Game game, int depth) {
+    protected int minSecondMove(Game game, int depth) {
         if (depth == maxDepth) {
             return eval(game);
         }
