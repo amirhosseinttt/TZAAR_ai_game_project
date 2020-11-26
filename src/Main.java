@@ -6,7 +6,7 @@ public class Main {
 
     public static void main(String[] args) {
         RandomPlayer whitePlayer = new RandomPlayer(PlayerType.white);
-        Ai blackPlayer = new OptimizedAI(PlayerType.black);
+        OptimizedAI blackPlayer = new OptimizedAI(PlayerType.black);
         Game game = new Game(whitePlayer, blackPlayer);
         Player player = game.play();
         System.out.println(player.getType());
