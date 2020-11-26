@@ -23,10 +23,10 @@ public class Ai extends Player {
             for (Action action : actions) {
                 if (action.getType() == Action.ActionType.attack) {
                     Game copyGame = game.copy();
-                    if (copyGame.applyActionTwo(this, action, false)) {
+                    if (copyGame.applyActionTwo(this, action, true)) {
                         continue;
                     }
-                    Player winner = game.getWinner();
+                    Player winner = copyGame.getWinner();
                     if (winner != null) {
                         if (winner.getType() == getType()) {
                             return action;
@@ -49,10 +49,10 @@ public class Ai extends Player {
             for (Action action : actions) {
                 if (action.getType() == Action.ActionType.attack) {
                     Game copyGame = game.copy();
-                    if (copyGame.applyActionTwo(this, action, false)) {
+                    if (copyGame.applyActionTwo(this, action, true)) {
                         continue;
                     }
-                    Player winner = game.getWinner();
+                    Player winner = copyGame.getWinner();
                     if (winner != null) {
                         if (winner.getType() == getType()) {
                             return action;
@@ -85,7 +85,7 @@ public class Ai extends Player {
             if (copyGame.applyActionTwo(this, action, false)) {
                 continue;
             }
-            Player winner = game.getWinner();
+            Player winner = copyGame.getWinner();
             if (winner != null) {
                 if (winner.getType() == getType()) {
                     return action;
@@ -115,7 +115,7 @@ public class Ai extends Player {
                 if (copyGame.applyActionTwo(this, action, true)) {
                     continue;
                 }
-                Player winner = game.getWinner();
+                Player winner = copyGame.getWinner();
                 if (winner != null) {
                     if (winner.getType() == getType()) {
                         return Integer.MAX_VALUE;
@@ -140,7 +140,7 @@ public class Ai extends Player {
             if (copyGame.applyActionTwo(this, action, false)) {
                 continue;
             }
-            Player winner = game.getWinner();
+            Player winner = copyGame.getWinner();
             if (winner != null) {
                 if (winner.getType() == getType()) {
                     return Integer.MAX_VALUE;
@@ -162,16 +162,16 @@ public class Ai extends Player {
         for (Action action : actions) {
             if (action.getType() == Action.ActionType.attack) {
                 Game copyGame = game.copy();
-                if (copyGame.applyActionTwo(this, action, false)) {
+                if (copyGame.applyActionTwo(this, action, true)) {
                     continue;
                 }
-                Player winner = game.getWinner();
+                Player winner = copyGame.getWinner();
                 if (winner != null) {
                     if (winner.getType() == getType().reverse()) {
                         return Integer.MIN_VALUE;
                     }
                 } else {
-                    minValue = Math.max(minValue, minSecondAttack(game, depth + 1));
+                    minValue = Math.min(minValue, minSecondMove(game, depth + 1));
                 }
             }
         }
@@ -179,7 +179,7 @@ public class Ai extends Player {
 
     }
 
-    private int minSecondAttack(Game game, int depth) {
+    private int minSecondMove(Game game, int depth) {
         if (depth == maxDepth) {
             return eval(game);
         }
@@ -191,13 +191,13 @@ public class Ai extends Player {
             if (copyGame.applyActionTwo(this, action, false)) {
                 continue;
             }
-            Player winner = game.getWinner();
+            Player winner = copyGame.getWinner();
             if (winner != null) {
                 if (winner.getType() == getType().reverse()) {
                     return Integer.MIN_VALUE;
                 }
             } else {
-                minValue = Math.max(minValue, maxForceAttack(game, depth + 1));
+                minValue = Math.min(minValue, maxForceAttack(game, depth + 1));
             }
         }
 
