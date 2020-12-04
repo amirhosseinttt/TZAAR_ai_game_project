@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class OptimizedAI extends Player {
 
     protected int doneActions = 0;
-    protected int maxDepth = 2;
+    protected int maxDepth = 4;
 
     public OptimizedAI(PlayerType type) {
         super(type);
@@ -14,6 +14,7 @@ public class OptimizedAI extends Player {
 
     @Override
     public Action forceAttack(Game game) {
+        autoSetMaxDepth(game);
         if (doneActions == 0 && getType() == PlayerType.white) {
             int maxValue = Integer.MIN_VALUE;
             Action bestAction = null;
@@ -69,6 +70,27 @@ public class OptimizedAI extends Player {
         }
     }
 
+    void autoSetMaxDepth(Game game) {
+        int maxCount = 0;
+        int minCount = 0;
+        for (Board.BoardRow boardRow : game.getBoard().getRows()) {
+            for (Board.BoardCell cell : boardRow.boardCells) {
+                if (cell.bead != null) {
+                    if (cell.bead.getPlayer().getType() == this.getType()) {
+                        maxCount++;
+                    } else {
+                        minCount++;
+                    }
+                }
+            }
+        }
+
+        int count = (int) Math.min(20, Math.log(10000) / Math.log((maxCount + minCount) / 2.0));
+        this.maxDepth = count;
+        System.out.println("this is the counted count! :)" + count);
+
+    }
+
     int eval(Game game) {
         int maxCount = 0;
         int minCount = 0;
@@ -89,6 +111,7 @@ public class OptimizedAI extends Player {
 
     @Override
     public Action secondAction(Game game) {
+        autoSetMaxDepth(game);
         int maxValue = Integer.MIN_VALUE;
         Action bestAction = null;
         ArrayList<Action> actions = getAllActions(game.getBoard());

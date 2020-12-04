@@ -21,6 +21,7 @@ public class Game {
     }
 
     public Player play() {
+
         Player winner;
         Action action = white.forceAttack(copy());
         if (action == null) {
@@ -35,6 +36,8 @@ public class Game {
             return winner;
         }
         while (true) {
+
+
             action = black.forceAttack(copy());
             if (action == null) {
                 winner = white;

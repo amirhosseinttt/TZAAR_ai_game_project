@@ -1,13 +1,14 @@
+import com.sun.rowset.internal.Row;
 import models.*;
 
 import java.util.ArrayList;
 
-public class Ai extends Player {
+public class ThreadedAI extends Player {
 
     protected int doneActions = 0;
     protected int maxDepth = 2;
 
-    public Ai(PlayerType type) {
+    public ThreadedAI(PlayerType type) {
         super(type);
     }
 
@@ -29,7 +30,7 @@ public class Ai extends Player {
                             return action;
                         }
                     } else {
-                        int temp = Math.max(maxValue, minForceAttack(game, 0));
+                        int temp = Math.max(maxValue, minForceAttack(game, 0, Integer.MIN_VALUE, Integer.MAX_VALUE));
                         if (temp > maxValue) {
                             maxValue = temp;
                             bestAction = action;
@@ -55,7 +56,7 @@ public class Ai extends Player {
                             return action;
                         }
                     } else {
-                        int temp = Math.max(maxValue, maxSecondMove(game, 0));
+                        int temp = Math.max(maxValue, maxSecondMove(game, 0, Integer.MIN_VALUE, Integer.MAX_VALUE));
                         if (temp > maxValue) {
                             maxValue = temp;
                             bestAction = action;
@@ -68,9 +69,6 @@ public class Ai extends Player {
         }
     }
 
-    //    int eval(Game game) {
-//        return 0;
-//    }
     int eval(Game game) {
         int maxCount = 0;
         int minCount = 0;
@@ -89,7 +87,6 @@ public class Ai extends Player {
         return maxCount - minCount;
     }
 
-
     @Override
     public Action secondAction(Game game) {
         int maxValue = Integer.MIN_VALUE;
@@ -106,7 +103,7 @@ public class Ai extends Player {
                     return action;
                 }
             } else {
-                int temp = Math.max(maxValue, minForceAttack(game, 0));
+                int temp = Math.max(maxValue, minForceAttack(game, 0, Integer.MIN_VALUE, Integer.MAX_VALUE));
                 if (temp > maxValue) {
                     maxValue = temp;
                     bestAction = action;
@@ -117,10 +114,11 @@ public class Ai extends Player {
         return bestAction;
     }
 
-    protected int maxForceAttack(Game game, int depth) {
+    protected int maxForceAttack(Game game, int depth, int alpha, int beta) { //useless alpha beta
         if (depth == maxDepth) {
             return eval(game);
         }
+        ArrayList<Thread> threads = new ArrayList<>();
 
         int maxValue = Integer.MIN_VALUE;
         ArrayList<Action> actions = getAllActions(game.getBoard());
@@ -136,14 +134,39 @@ public class Ai extends Player {
                         return Integer.MAX_VALUE;
                     }
                 } else {
-                    maxValue = Math.max(maxValue, maxSecondMove(copyGame, depth + 1));
+
+                    Thread thread = new Thread(new MyRunnable(copyGame, depth, alpha, beta) {
+                        @Override
+                        public void run() {
+                            super.run();
+                            this.returnVale = maxSecondMove(this.game, this.depth + 1, this.alpha, this.beta);
+                        }
+                    });
+                    threads.add(thread);
+
                 }
             }
+        }
+
+        for (Thread thread : threads) {
+            thread.start();
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (Thread thread : threads) {
+            maxValue = Math.max(thread.getPriority(), maxValue);
         }
         return maxValue;
     }
 
-    protected int maxSecondMove(Game game, int depth) {
+    protected int maxSecondMove(Game game, int depth, int alpha, int beta) {
         if (depth == maxDepth) {
             return eval(game);
         }
@@ -161,16 +184,21 @@ public class Ai extends Player {
                     return Integer.MAX_VALUE;
                 }
             } else {
-                maxValue = Math.max(maxValue, minForceAttack(game, depth + 1));
+                int eval = minForceAttack(game, depth + 1, alpha, beta);
+                maxValue = Math.max(maxValue, eval);
+                alpha = Math.max(alpha, eval);
+                if (beta <= alpha) break;
             }
         }
         return maxValue;
     }
 
-    protected int minForceAttack(Game game, int depth) {
+    protected int minForceAttack(Game game, int depth, int alpha, int beta) { //useless alpha beta
         if (depth == maxDepth) {
             return eval(game);
         }
+
+        ArrayList<Thread> threads = new ArrayList<>();
 
         int minValue = Integer.MAX_VALUE;
         ArrayList<Action> actions = getAllActions(game.getBoard());
@@ -186,15 +214,41 @@ public class Ai extends Player {
                         return Integer.MIN_VALUE;
                     }
                 } else {
-                    minValue = Math.min(minValue, minSecondMove(game, depth + 1));
+
+                    Thread thread = new Thread(new MyRunnable(copyGame, depth, alpha, beta) {
+                        @Override
+                        public void run() {
+                            super.run();
+                            this.returnVale = minSecondMove(this.game, this.depth + 1, this.alpha, this.beta);
+                        }
+                    });
+                    threads.add(thread);
+
                 }
             }
         }
+
+        for (Thread thread : threads) {
+            thread.start();
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (Thread thread : threads) {
+            minValue = Math.min(thread.getPriority(), minValue);
+        }
+
         return minValue;
 
     }
 
-    protected int minSecondMove(Game game, int depth) {
+    protected int minSecondMove(Game game, int depth, int alpha, int beta) {
         if (depth == maxDepth) {
             return eval(game);
         }
@@ -212,10 +266,36 @@ public class Ai extends Player {
                     return Integer.MIN_VALUE;
                 }
             } else {
-                minValue = Math.min(minValue, maxForceAttack(game, depth + 1));
+                int eval = maxForceAttack(game, depth + 1, alpha, beta);
+                minValue = Math.min(minValue, eval);
+                beta = Math.min(beta, eval);
+                if (beta <= alpha) break;
             }
         }
 
         return minValue;
+    }
+}
+
+class MyRunnable implements Runnable {
+    volatile int returnVale;
+    Game game;
+    int depth;
+    int alpha;
+    int beta;
+
+    public MyRunnable(Game game, int depth, int alpha, int beta) {
+        this.game = game;
+        this.depth = depth;
+        this.alpha = alpha;
+        this.beta = beta;
+    }
+
+    public void run() {
+    }
+
+    public int getReturnVale() {
+        this.game = null;
+        return returnVale;
     }
 }
